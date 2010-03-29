@@ -6,7 +6,7 @@ MindReader is at a very early stage. At this moment, it's only an experiment.
 
 Find by one field::
 
-result = MindReader.new(MyClass, :field).do_it('field' => 'value')
+    result = MindReader.new(MyClass, :field).do_it('field' => 'value')
 
 
 Find by multiple fields::
