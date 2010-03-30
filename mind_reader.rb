@@ -11,14 +11,9 @@ class MindReader
   end
 
   def do_it(params)
-    method_name = ''
-    @fields.each do |field|
-      unless @ranges.include? field
-        method_name << '_and_' unless method_name.blank?
-        method_name << field.to_s
-      end
-    end
-    method_name = 'find_all_by_' + method_name
+    method_name = 'find_all_by_' +
+      @fields.collect {|field| field.to_s unless @ranges.include? field }.
+        compact.join('_and_')
 
     conditions = {}
     values = @fields.collect do |field|
