@@ -29,7 +29,7 @@ Find with lookup::
 Find given a range::
 
     reader = MindReader.new(MyClass, :field, :anything) do |r|
-      r.anything :range => 5..10, :start => :any_initial, :end => :any_final
+      r.anything :range, :start => :any_initial, :end => :any_final
     end
     result = reader.do_it 'field' => 'value', 'any_initial' => 5, 'any_final' => 10
 
