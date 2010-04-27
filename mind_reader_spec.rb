@@ -48,7 +48,7 @@ describe MindReader do
     describe 'range of values' do
       it 'should accept a range of values' do
         reader = MindReader.new(MyClass, :field, :anything) do |r|
-          r.anything :range => 5..10, :start => :any_initial, :end => :any_final
+          r.anything :range, :start => :any_initial, :end => :any_final
         end
         MyClass.should_receive(:find_all_by_field).with('value',
           :conditions => {:anything => 5..10})

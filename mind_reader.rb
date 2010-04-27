@@ -38,8 +38,9 @@ class MindReader
   end
 
   def method_missing(message, *params, &block)
-    hash = params.first
-    if hash.include? :range
+    hash = params.last
+    type = params.count > 1 ? params.first : nil
+    if type == :range
       @ranges[message] = [hash[:start], hash[:end]]
     elsif @fields.include?(message)
       @lookup_fields[message] = [hash[:lookup_field], block]
