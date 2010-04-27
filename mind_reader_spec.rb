@@ -33,16 +33,6 @@ describe MindReader do
         end
         reader.do_it 'field' => 'value', 'customer_name' => 'Fulano'
       end
-
-      it 'calling for non-field named methods inside initialize block should raise NoMethodError' do
-        lambda {
-          reader = MindReader.new(MyClass, :field, :customer_id) do |r|
-            r.customer_other_thing({}) do |name|
-              puts 'never executed'
-            end
-          end
-        }.should raise_error NoMethodError, /customer_other_thing/
-      end
     end
 
     describe 'range of values' do
@@ -54,6 +44,16 @@ describe MindReader do
           :conditions => {:anything => 5..10})
         reader.do_it 'field' => 'value', 'any_initial' => 5, 'any_final' => 10
       end
+    end
+
+    it 'calling for non-field named methods inside initialize block should raise NoMethodError' do
+      lambda {
+        reader = MindReader.new(MyClass, :field, :customer_id) do |r|
+          r.customer_other_thing({}) do |name|
+            puts 'never executed'
+          end
+        end
+      }.should raise_error NoMethodError, /customer_other_thing/
     end
 
     it 'results of any finding should be returned' do
