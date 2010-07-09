@@ -11,27 +11,37 @@ class MindReader
   end
 
   def do_it(params)
-    method_name = 'find_all_by_' +
-      @fields.collect {|field| field.to_s unless @ranges.include? field }.
-        compact.join('_and_')
+    params.stringify_keys!
 
     conditions = {}
+    omitted_fields = []
     values = @fields.collect do |field|
       field = field.to_sym
       if @lookup_fields.include?(field)
         lookup, block = @lookup_fields[field]
         block[params[lookup.to_s]]
       elsif @ranges.include?(field)
-        conditions[field] = params[@ranges[field].first.to_s].to_i..params[@ranges[field].second.to_s].to_i
+        conditions[field] = params[@ranges[field].first.to_s]..params[@ranges[field].second.to_s]
         nil
       else
-        params[field.to_s]
+        value = params[field.to_s]
+        omitted_fields << field if value.blank?
+        value
       end
     end
+
+    search_fields = @fields - omitted_fields
+    method_name = 'find'
+    method_name += '_all_by_' +
+      search_fields.collect {|field| field.to_s unless @ranges.include? field }.
+        compact.join('_and_') unless search_fields.empty?
+    puts method_name
+
+    values.reject! &:blank?
+    p values
     if conditions.empty?
-      @klass.send method_name, *values.compact
+      @klass.send method_name, *values
     else
-      values.compact!
       param_string = (0...values.size).to_a.collect {|index| "values[#{index}]"}.join(',')
       eval "@klass.send method_name, #{param_string}, {:conditions => conditions}"
     end

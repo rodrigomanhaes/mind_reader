@@ -68,7 +68,14 @@ describe MindReader do
       MyClass.result = 'result value'
       reader.do_it('field' => 'value').should == 'result value'
     end
-  end
 
+    describe 'omitted fields' do
+      it 'should be ignored when calling find' do
+        reader = MindReader.new(MyClass, :field, :another_field)
+        MyClass.should_receive(:find_all_by_another_field).with('another_value')
+        reader.do_it 'field' => '', 'another_field' => 'another_value'
+      end
+    end
+  end
 end
 
