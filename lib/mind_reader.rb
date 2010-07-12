@@ -14,6 +14,7 @@ class MindReader
     method_name = generate_method_name(fields)
     params = generate_params_list(values)
     params << generate_conditions
+    params.unshift(:all) unless values.present?
     @klass.send method_name, *params.compact
   end
 
@@ -46,12 +47,13 @@ class MindReader
   end
 
   def generate_method_name(fields)
+    return 'find' unless fields.present?
     method_name = 'find_all_by_' + fields.join('_and_')
     method_name.to_sym
   end
 
   def generate_params_list(values)
-    values
+    Array.new(values)
   end
 
   def is_range(field)
@@ -101,7 +103,7 @@ class Rangie
   attr_writer :begin_value, :end_value
 
   def get_hash
-    {@field => @begin_value..@end_value}
+    {@field => @begin_value.to_i..@end_value.to_i}
   end
 end
 

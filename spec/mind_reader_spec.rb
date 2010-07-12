@@ -65,6 +65,17 @@ describe MindReader do
         MyClass.should_receive(:find_all_by_another_field).with('another_value')
         reader.execute 'field' => '', 'another_field' => 'another_value'
       end
+
+      it 'should call find :all if all params are omitted' do
+        reader = MindReader.new(MyClass) do |r|
+          r.range :field, :start => :birth, :end => :death
+        end
+        MyClass.should_receive(:find).
+                 with(:all, :conditions => {:field => 1..100 })
+        reader.execute 'birth' => '1', 'death' => '100', 'another_field' => ''
+      end
+
+
     end
   end
 end
