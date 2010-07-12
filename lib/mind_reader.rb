@@ -12,9 +12,7 @@ class MindReader
   def execute(param_hash)
     fields, values = get_fields_and_values(param_hash.symbolize_keys)
     method_name = generate_method_name(fields)
-    params = generate_params_list(values)
-    params << generate_conditions
-    params.unshift(:all) unless values.present?
+    params = generate_params(values)
     @klass.send method_name, *params.compact
   end
 
@@ -50,6 +48,13 @@ class MindReader
     return 'find' unless fields.present?
     method_name = 'find_all_by_' + fields.join('_and_')
     method_name.to_sym
+  end
+
+  def generate_params(values)
+    params = generate_params_list(values)
+    params << generate_conditions
+    params.unshift(:all) unless values.present?
+    params
   end
 
   def generate_params_list(values)
