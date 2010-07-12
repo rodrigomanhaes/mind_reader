@@ -9,16 +9,16 @@ describe MindReader do
     describe 'plain fields' do
       it 'should execute search for a single field' do
         MyClass.should_receive(:find_all_by_field).with('value')
-        MindReader.new(MyClass, :field).do_it('field' => 'value')
+        MindReader.new(MyClass).execute('field' => 'value')
       end
 
       it 'should execute search for multiple fields' do
-        MyClass.should_receive(:find_all_by_field_and_another_field_and_another_other_field).
-                with('value for', 'value for another', 'value for another other')
-        MindReader.new(MyClass, :field, :another_field, :another_other_field).
-          do_it('field' => 'value for',
-                'another_field' => 'value for another',
-                'another_other_field' => 'value for another other')
+        MyClass.should_receive(:find_all_by_another_field_and_another_other_field_and_field).
+                with('value for another', 'value for another other', 'value for')
+        MindReader.new(MyClass).
+          execute('field' => 'value for',
+                  'another_field' => 'value for another',
+                  'another_other_field' => 'value for another other')
       end
     end
 
@@ -27,33 +27,23 @@ describe MindReader do
         class Customer; end
         (id42 = Object.new).stub(:id).and_return(42)
         Customer.should_receive(:find_all_by_name).with('Fulano').and_return(id42)
-        MyClass.should_receive(:find_all_by_field_and_customer_id).with('value', 42)
-        reader = MindReader.new(MyClass, :field, :customer_id) do |r|
-          r.customer_id(:lookup_field => :customer_name) {|name| Customer.find_all_by_name(name).id }
+        MyClass.should_receive(:find_all_by_customer_id_and_field).with(42, 'value')
+        reader = MindReader.new(MyClass) do |r|
+          r.lookup(:customer_name, :customer_id) {|name| Customer.find_all_by_name(name).id }
         end
-        reader.do_it 'field' => 'value', 'customer_name' => 'Fulano'
+        reader.execute 'field' => 'value', 'customer_name' => 'Fulano'
       end
     end
 
     describe 'range of values' do
       it 'should accept a range of values' do
-        reader = MindReader.new(MyClass, :field, :anything) do |r|
-          r.anything :range, :start => :any_initial, :end => :any_final
+        reader = MindReader.new(MyClass) do |r|
+          r.range :anything, :start => :any_initial, :end => :any_final
         end
         MyClass.should_receive(:find_all_by_field).with('value',
           :conditions => {:anything => 5..10})
-        reader.do_it 'field' => 'value', 'any_initial' => 5, 'any_final' => 10
+        reader.execute 'field' => 'value', 'any_initial' => 5, 'any_final' => 10
       end
-    end
-
-    it 'calling for non-field named methods inside initialize block should raise NoMethodError' do
-      lambda {
-        reader = MindReader.new(MyClass, :field, :customer_id) do |r|
-          r.customer_other_thing({}) do |name|
-            puts 'never executed'
-          end
-        end
-      }.should raise_error NoMethodError, /customer_other_thing/
     end
 
     it 'results of any finding should be returned' do
@@ -64,16 +54,16 @@ describe MindReader do
         end
       end
 
-      reader = MindReader.new(MyClass, :field)
+      reader = MindReader.new(MyClass)
       MyClass.result = 'result value'
-      reader.do_it('field' => 'value').should == 'result value'
+      reader.execute('field' => 'value').should == 'result value'
     end
 
     describe 'omitted fields' do
       it 'should be ignored when calling find' do
-        reader = MindReader.new(MyClass, :field, :another_field)
+        reader = MindReader.new(MyClass)
         MyClass.should_receive(:find_all_by_another_field).with('another_value')
-        reader.do_it 'field' => '', 'another_field' => 'another_value'
+        reader.execute 'field' => '', 'another_field' => 'another_value'
       end
     end
   end
