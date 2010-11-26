@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'active_support'
+require 'active_support/all'
 
 class MindReader
   def initialize(klass)
