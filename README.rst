@@ -1,35 +1,82 @@
 MindReader: Easy searching for ActiveRecord applications
 ========================================================
 
-MindReader is at a very early stage. At this moment, it's only an experiment.
+Given the following objects::
+
+    @robin = Customer.create! :name => 'Damian Wayne',
+                              :address => 'Wayne Manor, Gotham City',
+                              :age => 14
+    @batman = Customer.create! :name => 'Dick Grayson',
+                               :address => 'Wayne Manor, Gotham City',
+                               :sidekick_id => @robin.id,
+                               :age => 26
+    @superman = Customer.create! :name => 'Kal-El',
+                                 :address => 'Kandor, New Krypton',
+                                 :age => 36
 
 
 Find by one field::
 
-    result = MindReader.new(MyClass, :field).do_it('field' => 'value')
+    reader = MindReader.new(Customer)
+    result = reader.execute(:address => 'Wayne Manor, Gotham City')
+    result.should have(2).bat_heroes
+    result.should include(@batman, @robin)
 
 
 Find by multiple fields::
 
-    result = MindReader.new(MyClass, :field, :another_field, :another_other_field).
-               do_it('field' => 'value for',
-                     'another_field' => 'value for another',
-                     'another_other_field' => 'value for another other')
+    reader = MindReader.new(Customer)
+    reader.execute(:address => 'Wayne Manor, Gotham City',
+      :name => 'Dick Grayson').should == [@batman]
 
 
 Find with lookup::
 
-    reader = MindReader.new(MyClass, :field, :customer_id) do |r|
-      r.customer_id(:lookup_field => :customer_name) {|name| Customer.find_all_by_name(name).id }
+    reader = MindReader.new(Customer) do |r|
+      r.sidekick_id(:lookup => :sidekick_name) {|name| Customer.find_by_name(name).id }
     end
-    result = reader.do_it 'field' => 'value', 'customer_name' => 'Fulano'
-
+    reader.execute(:sidekick_name => 'Damian Wayne').should == [@batman]
 
 
 Find given a range::
 
-    reader = MindReader.new(MyClass, :field, :anything) do |r|
-      r.anything :range, :start => :any_initial, :end => :any_final
+    reader = MindReader.new(Customer) do |r|
+      r.age :range => :start_age..:end_age
     end
-    result = reader.do_it 'field' => 'value', 'any_initial' => 5, 'any_final' => 10
+    reader.execute('start_age' => 25, 'end_age' => 36).should == [@batman, @superman]
+
+
+Blank fields are ignored::
+
+    reader = MindReader.new(Customer)
+    reader.execute(:name => 'Kal-El', :address => '').should == [@superman]
+
+
+If all fields are blank, returns nil::
+
+    reader = MindReader.new(Customer)
+    reader.execute(:name => '', :address => '').should be_nil
+
+
+unless you say you want all objects::
+
+    reader = MindReader.new(Customer)
+    reader.retrieve_all_when_no_value_is_given = true
+    result = reader.execute(:name => '', :address => '')
+    result.should have(3).super_heroes
+    result.should include(@batman, @robin, @superman)
+
+
+
+How to run specs
+----------------
+
+For acceptance, end-to-end specs::
+
+    $ rake acceptance
+
+
+For unit specs::
+
+    $ rake spec
 
