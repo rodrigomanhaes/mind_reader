@@ -2,8 +2,9 @@ require File.join(File.dirname(__FILE__), 'spec_helper')
 
 feature "MindReader acceptance" do
   background do
-    @batman = Customer.create! :name => 'Dick Grayson', :address => 'Wayne Manor, Gotham City'
     @robin = Customer.create! :name => 'Damian Wayne', :address => 'Wayne Manor, Gotham City'
+    @batman = Customer.create! :name => 'Dick Grayson', :address => 'Wayne Manor, Gotham City',
+                               :sidekick_id => @robin.id
     @superman = Customer.create! :name => 'Kal-El', :address => 'Kandor, New Krypton'
 
     @reader = MindReader.new(Customer)
@@ -33,6 +34,13 @@ feature "MindReader acceptance" do
     result = @reader.execute(:name => '', :address => '')
     result.should have(3).super_heroes
     result.should include(@batman, @robin, @superman)
+  end
+
+  scenario 'lookup fields' do
+    @reader = MindReader.new(Customer) do |r|
+      r.sidekick_id(:lookup => :sidekick_name) {|name| Customer.find_by_name(name).id }
+    end
+    @reader.execute(:sidekick_name => 'Damian Wayne').should == [@batman]
   end
 end
 

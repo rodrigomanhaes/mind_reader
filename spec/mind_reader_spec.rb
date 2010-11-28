@@ -42,5 +42,16 @@ describe MindReader do
       end
     end
   end
+
+  context 'lookup fields' do
+    it 'calls find for the inner field, not given lookup' do
+      BlankSlate.should_receive(:find_all_by_anything_else_and_quux).
+                 with("something", "bar foo")
+      @reader = MindReader.new(BlankSlate) do |r|
+        r.quux(:lookup => :foobar) {|value| "#{value} foo" }
+      end
+      @reader.execute(:foobar => 'bar', :anything_else => 'something')
+    end
+  end
 end
 

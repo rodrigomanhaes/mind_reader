@@ -9,5 +9,6 @@ require 'config'
 require 'mind_reader'
 
 class Customer < ActiveRecord::Base
+  has_many :sidekicks, :class_name => 'Customer'
 end
 
