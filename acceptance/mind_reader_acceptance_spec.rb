@@ -2,10 +2,16 @@ require File.join(File.dirname(__FILE__), 'spec_helper')
 
 feature "MindReader acceptance" do
   background do
-    @robin = Customer.create! :name => 'Damian Wayne', :address => 'Wayne Manor, Gotham City'
-    @batman = Customer.create! :name => 'Dick Grayson', :address => 'Wayne Manor, Gotham City',
-                               :sidekick_id => @robin.id
-    @superman = Customer.create! :name => 'Kal-El', :address => 'Kandor, New Krypton'
+    @robin = Customer.create! :name => 'Damian Wayne',
+                              :address => 'Wayne Manor, Gotham City',
+                              :age => 14
+    @batman = Customer.create! :name => 'Dick Grayson',
+                               :address => 'Wayne Manor, Gotham City',
+                               :sidekick_id => @robin.id,
+                               :age => 26
+    @superman = Customer.create! :name => 'Kal-El',
+                                 :address => 'Kandor, New Krypton',
+                                 :age => 36
 
     @reader = MindReader.new(Customer)
   end
@@ -41,6 +47,13 @@ feature "MindReader acceptance" do
       r.sidekick_id(:lookup => :sidekick_name) {|name| Customer.find_by_name(name).id }
     end
     @reader.execute(:sidekick_name => 'Damian Wayne').should == [@batman]
+  end
+
+  scenario 'range' do
+    reader = MindReader.new(Customer) do |r|
+      r.age :range => :start_age..:end_age
+    end
+    reader.execute('start_age' => 25, 'end_age' => 36).should == [@batman, @superman]
   end
 end
 

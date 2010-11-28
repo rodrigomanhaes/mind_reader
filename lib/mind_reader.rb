@@ -13,9 +13,8 @@ class MindReader
 
   def execute(pairs)
     process(pairs)
-    fields, values = get_fields_and_values(pairs)
-    if fields.present?
-      @klass.send "find_all_by_#{fields.join('_and_')}", *values
+    if pairs.present?
+      @klass.where(pairs)
     else
       retrieve_all_when_no_value_is_given ? @klass.find(:all) : nil
     end
@@ -28,37 +27,45 @@ class MindReader
   end
 
   def process(pairs)
-    lookupify(pairs)
+    remove_blanks(pairs)
+    handle_lookup(pairs)
+    handle_range(pairs)
   end
 
-  def lookupify(pairs)
+  def remove_blanks(pairs)
+    pairs.reject! {|k, v| v.blank?}
+  end
+
+  def handle_lookup(pairs)
     configs.each do |c|
-      lookup_value = pairs.delete(c[:args][:lookup])
-      pairs[c[:field]] = c[:block].call(lookup_value)
-    end
-  end
-
-  def get_fields_and_values(pairs)
-    fields, values = [], []
-    pairs.each_pair do |key, value|
-      if value.present?
-        fields << key
-        values << value
+      if c[:args].has_key?(:lookup)
+        lookup_value = pairs.delete(c[:args][:lookup])
+        pairs[c[:field]] = c[:block].call(lookup_value)
       end
     end
-    [fields, values]
-  end
-end
-
-class ConfigurableObject
-  def initialize
-    @configs = []
   end
 
-  def method_missing(method_name, *args, &block)
-    @configs << {:field => method_name, :args => args.first, :block => block}
+  def handle_range(pairs)
+    configs.each do |c|
+      if c[:args].has_key?(:range)
+        range = c[:args][:range]
+        start_field, end_field = range.begin.to_s, range.end.to_s
+        start_value, end_value = pairs.delete(start_field), pairs.delete(end_field)
+        pairs.merge! c[:field] => start_value..end_value
+      end
+    end
   end
 
-  attr_reader :configs
+  class ConfigurableObject
+    def initialize
+      @configs = []
+    end
+
+    def method_missing(method_name, *args, &block)
+      @configs << {:field => method_name, :args => args.first, :block => block}
+    end
+
+    attr_reader :configs
+  end
 end
 
