@@ -30,6 +30,13 @@ Find by multiple fields::
       :name => 'Dick Grayson').should == [@batman]
 
 
+String fields are evaluated partially::
+
+    result = @reader.execute(:name => 'ay')
+    result.should have(2).super_heroes
+    result.should include(@batman, @robin)
+
+
 Find with lookup::
 
     reader = MindReader.new(Customer) do |r|

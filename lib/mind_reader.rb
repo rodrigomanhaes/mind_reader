@@ -12,9 +12,10 @@ class MindReader
   attr_accessor :retrieve_all_when_no_value_is_given
 
   def execute(pairs)
-    process(pairs)
-    if pairs.present?
-      @klass.where(pairs)
+    @pairs = pairs
+    process
+    if @pairs.present? || @clause.first.present?
+      @klass.where(@pairs).where(*@clause.try(:flatten))
     else
       retrieve_all_when_no_value_is_given ? @klass.find(:all) : nil
     end
@@ -26,34 +27,49 @@ class MindReader
     @configuration.configs
   end
 
-  def process(pairs)
-    remove_blanks(pairs)
-    handle_lookup(pairs)
-    handle_range(pairs)
+  def process
+    remove_blanks
+    handle_lookup
+    handle_range
+    handle_partials
   end
 
-  def remove_blanks(pairs)
-    pairs.reject! {|k, v| v.blank?}
+  def remove_blanks
+    @pairs.reject! {|k, v| v.blank?}
   end
 
-  def handle_lookup(pairs)
+  def handle_partials
+    string_keys = @pairs.map {|field, value|
+      field if string_field?(field) && value.present?
+    }.
+    compact
+    @clause = [string_keys.map {|k| "#{k} like ?" }.join(" and "),
+               string_keys.map {|k| "%#{@pairs[k]}%"}]
+    string_keys.each {|field| @pairs.delete(field) }
+  end
+
+  def handle_lookup
     configs.each do |c|
       if c[:args].has_key?(:lookup)
-        lookup_value = pairs.delete(c[:args][:lookup])
-        pairs[c[:field]] = c[:block].call(lookup_value)
+        lookup_value = @pairs.delete(c[:args][:lookup])
+        @pairs[c[:field]] = c[:block].call(lookup_value)
       end
     end
   end
 
-  def handle_range(pairs)
+  def handle_range
     configs.each do |c|
       if c[:args].has_key?(:range)
         range = c[:args][:range]
         start_field, end_field = range.begin.to_s, range.end.to_s
-        start_value, end_value = pairs.delete(start_field), pairs.delete(end_field)
-        pairs.merge! c[:field] => start_value..end_value
+        start_value, end_value = @pairs.delete(start_field), @pairs.delete(end_field)
+        @pairs.merge! c[:field] => start_value..end_value
       end
     end
+  end
+
+  def string_field?(field)
+    @klass.columns_hash[field.to_s].try(:type) == :string
   end
 
   class ConfigurableObject

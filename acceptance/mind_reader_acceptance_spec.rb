@@ -27,6 +27,12 @@ feature "MindReader acceptance" do
       :name => 'Dick Grayson').should == [@batman]
   end
 
+  scenario 'search for partial content by default' do
+    result = @reader.execute(:name => 'ay')
+    result.should have(2).super_heroes
+    result.should include(@batman, @robin)
+  end
+
   scenario 'omitted fields are ignored' do
     @reader.execute(:name => 'Kal-El', :address => '').should == [@superman]
   end
