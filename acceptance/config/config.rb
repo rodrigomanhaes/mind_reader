@@ -2,7 +2,7 @@ require 'yaml'
 require 'logger'
 require 'active_record'
 require 'sqlite3'
-require 'rspec'
+require 'spec'
 require 'database_cleaner'
 
 # database creation
@@ -30,7 +30,7 @@ ActiveRecord::Base.logger = Logger.new(File.open('./acceptance/config/test.log',
 DatabaseCleaner.app_root = "#{DatabaseCleaner.app_root}/acceptance"
 DatabaseCleaner.strategy = :truncation
 
-RSpec.configure do |config|
+Spec::Runner.configure do |config|
   config.before :each do
     DatabaseCleaner.start
   end

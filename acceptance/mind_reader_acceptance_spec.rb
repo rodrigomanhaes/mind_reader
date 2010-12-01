@@ -57,7 +57,7 @@ feature "MindReader acceptance" do
 
   scenario 'range' do
     reader = MindReader.new(Customer) do |r|
-      r.age :range => :start_age..:end_age
+      r.age :range => [:start_age, :end_age]
     end
     reader.execute('start_age' => 25, 'end_age' => 36).should == [@batman, @superman]
   end

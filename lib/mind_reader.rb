@@ -12,10 +12,11 @@ class MindReader
   attr_accessor :retrieve_all_when_no_value_is_given
 
   def execute(pairs)
+    @conditions = nil
     @pairs = pairs
     process
-    if @pairs.present? || @clause.first.present?
-      @klass.where(@pairs).where(*@clause.try(:flatten))
+    if @conditions.present?
+      @klass.find(:all, :conditions => @conditions)
     else
       retrieve_all_when_no_value_is_given ? @klass.find(:all) : nil
     end
@@ -31,21 +32,27 @@ class MindReader
     remove_blanks
     handle_lookup
     handle_range
-    handle_partials
+    handle_conditions
   end
 
   def remove_blanks
     @pairs.reject! {|k, v| v.blank?}
   end
 
-  def handle_partials
-    string_keys = @pairs.map {|field, value|
-      field if string_field?(field) && value.present?
-    }.
-    compact
-    @clause = [string_keys.map {|k| "#{k} like ?" }.join(" and "),
-               string_keys.map {|k| "%#{@pairs[k]}%"}]
-    string_keys.each {|field| @pairs.delete(field) }
+  def handle_conditions
+    return if @pairs.empty?
+    keys = @pairs.keys
+    operator = lambda {|k| string_field?(k) ? 'like' : '='}
+    value = lambda {|k| string_field?(k) ? "%#{@pairs[k]}%" : @pairs[k].to_s}
+    init_conditions
+    @conditions[0] << keys.map {|k| "#{k} #{operator.call(k)} ?" }.join(" and ")
+    @conditions << keys.map {|k| value.call(k) }
+    @conditions.flatten!
+  end
+
+  def init_conditions
+    @conditions ||= ['']
+    @conditions[0] << ' and ' if @conditions[0].present?
   end
 
   def handle_lookup
@@ -60,10 +67,11 @@ class MindReader
   def handle_range
     configs.each do |c|
       if c[:args].has_key?(:range)
-        range = c[:args][:range]
-        start_field, end_field = range.begin.to_s, range.end.to_s
-        start_value, end_value = @pairs.delete(start_field), @pairs.delete(end_field)
-        @pairs.merge! c[:field] => start_value..end_value
+        start_field, end_field = c[:args][:range]
+        start_value, end_value = @pairs.delete(start_field.to_s), @pairs.delete(end_field.to_s)
+        init_conditions
+        @conditions[0] << "(#{c[:field]} >= ? and #{c[:field]} <= ?)"
+        @conditions << start_value << end_value
       end
     end
   end
