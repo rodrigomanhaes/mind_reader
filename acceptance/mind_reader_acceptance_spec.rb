@@ -22,6 +22,12 @@ feature "MindReader acceptance" do
     result.should include(@batman, @robin)
   end
 
+  scenario 'accepts keys as strings' do
+    result = @reader.execute('address' => 'Wayne Manor, Gotham City')
+    result.should have(2).bat_heroes
+    result.should include(@batman, @robin)
+  end
+
   scenario 'full content for multiple fields' do
     @reader.execute(:address => 'Wayne Manor, Gotham City',
       :name => 'Dick Grayson').should == [@batman]
@@ -60,6 +66,18 @@ feature "MindReader acceptance" do
       r.age :range => [:start_age, :end_age]
     end
     reader.execute('start_age' => 25, 'end_age' => 36).should == [@batman, @superman]
+  end
+
+  scenario 'blank range fields are ignored' do
+    run_range = lambda {|from, to|
+      reader = MindReader.new(Customer) do |r|
+        r.age :range => [:start_age, :end_age]
+      end
+      reader.execute('start_age' => from, 'end_age' => to).should == nil
+    }
+    run_range.call('', '')
+    run_range.call('', 30)
+    run_range.call(20, '')
   end
 end
 

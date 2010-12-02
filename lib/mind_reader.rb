@@ -43,9 +43,10 @@ class MindReader
     return if @pairs.empty?
     keys = @pairs.keys
     operator = lambda {|k| string_field?(k) ? 'like' : '='}
-    value = lambda {|k| string_field?(k) ? "%#{@pairs[k]}%" : @pairs[k].to_s}
+    value = lambda {|k| string_field?(k) ? "%#{@pairs[k].to_s.upcase}%" : @pairs[k].to_s}
+    calculate = lambda {|k| string_field?(k) ? "upper(#{k})" : k }
     init_conditions
-    @conditions[0] << keys.map {|k| "#{k} #{operator.call(k)} ?" }.join(" and ")
+    @conditions[0] << keys.map {|k| "#{calculate.call(k)} #{operator.call(k)} ?" }.join(" and ")
     @conditions << keys.map {|k| value.call(k) }
     @conditions.flatten!
   end
@@ -69,15 +70,25 @@ class MindReader
       if c[:args].has_key?(:range)
         start_field, end_field = c[:args][:range]
         start_value, end_value = @pairs.delete(start_field.to_s), @pairs.delete(end_field.to_s)
-        init_conditions
-        @conditions[0] << "(#{c[:field]} >= ? and #{c[:field]} <= ?)"
-        @conditions << start_value << end_value
+        if start_value.present? && end_value.present?
+          if date_field?(c[:field])
+            start_value = start_value.to_date
+            end_value = end_value.to_date
+          end
+          init_conditions
+          @conditions[0] << "(#{c[:field]} >= ? and #{c[:field]} <= ?)"
+          @conditions << start_value << end_value
+        end
       end
     end
   end
 
+  def date_field?(field)
+    @klass.columns_hash[field.to_s].try(:type) == :date
+  end
+
   def string_field?(field)
-    @klass.columns_hash[field.to_s].try(:type) == :string
+    [:string, :text].include? @klass.columns_hash[field.to_s].try(:type)
   end
 
   class ConfigurableObject
