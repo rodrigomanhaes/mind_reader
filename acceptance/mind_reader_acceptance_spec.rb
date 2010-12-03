@@ -4,14 +4,17 @@ feature "MindReader acceptance" do
   background do
     @robin = Customer.create! :name => 'Damian Wayne',
                               :address => 'Wayne Manor, Gotham City',
-                              :age => 14
+                              :age => 14,
+                              :summary => 'He is an evil Robin'
     @batman = Customer.create! :name => 'Dick Grayson',
                                :address => 'Wayne Manor, Gotham City',
                                :sidekick_id => @robin.id,
-                               :age => 26
+                               :age => 26,
+                               :summary => "He is a happy Batman"
     @superman = Customer.create! :name => 'Kal-El',
                                  :address => 'Kandor, New Krypton',
-                                 :age => 36
+                                 :age => 36,
+                                 :summary => "He's not anymore the last son of Krypton"
 
     @reader = MindReader.new(Customer)
   end
@@ -27,10 +30,18 @@ feature "MindReader acceptance" do
       :name => 'Dick Grayson').should == [@batman]
   end
 
-  scenario 'search for partial content by default' do
-    result = @reader.execute(:name => 'ay')
-    result.should have(2).super_heroes
-    result.should include(@batman, @robin)
+  context 'partial content' do
+    scenario 'for string fields' do
+      result = @reader.execute(:name => 'ay')
+      result.should have(2).super_heroes
+      result.should include(@batman, @robin)
+    end
+
+    scenario 'for text (a.k.a. memo) fields' do
+      result = @reader.execute(:summary => ' is ')
+      result.should have(2).super_heroes
+      result.should include(@batman, @robin)
+    end
   end
 
   scenario 'omitted fields are ignored' do

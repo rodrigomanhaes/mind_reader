@@ -8,8 +8,12 @@ describe MindReader do
       @reader = MindReader.new(BlankSlate)
     end
 
+    def stub_type(type)
+      BlankSlate.stub(:columns_hash).and_return(stub(:[] => stub(:type => type)))
+    end
+
     def stub_string
-      BlankSlate.stub(:columns_hash).and_return(stub(:[] => stub(:type => :string)))
+      stub_type(:string)
     end
 
     def mock_empty_pairs
@@ -39,13 +43,23 @@ describe MindReader do
       @reader.execute(:foo => :foo_value, :bar => :bar_value, :qux => :qux_value)
     end
 
-    it 'preforms search by partial content' do
-      stub_string
-      mock_empty_pairs
-      @query_mock.should_receive(:where).
-                  with("foo like ? and bar like ? and qux like ?",
-                       '%foo_value%', '%bar_value%', '%qux_value%')
-      @reader.execute(:foo => :foo_value, :bar => :bar_value, :qux => :qux_value)
+    context 'search by partial content for' do
+      def should_make_partial_search_for(type)
+        stub_type(type)
+        mock_empty_pairs
+        @query_mock.should_receive(:where).
+                    with("foo like ? and bar like ? and qux like ?",
+                         '%foo_value%', '%bar_value%', '%qux_value%')
+        @reader.execute(:foo => :foo_value, :bar => :bar_value, :qux => :qux_value)
+      end
+
+      it 'string fields' do
+        should_make_partial_search_for :string
+      end
+
+      it 'text fields' do
+        should_make_partial_search_for :text
+      end
     end
 
     context 'omitted fields' do

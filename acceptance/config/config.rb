@@ -16,6 +16,7 @@ create table customers (
   address char(200),
   sidekick_id integer,
   age int,
+  summary text,
   primary key(id));
 ''')
 

@@ -69,7 +69,7 @@ class MindReader
   end
 
   def string_field?(field)
-    @klass.columns_hash[field.to_s].try(:type) == :string
+    [:string, :text].include? @klass.columns_hash[field.to_s].try(:type)
   end
 
   class ConfigurableObject
