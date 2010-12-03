@@ -5,7 +5,7 @@ feature "MindReader acceptance" do
     @robin = Customer.create! :name => 'Damian Wayne',
                               :address => 'Wayne Manor, Gotham City',
                               :age => 14,
-                              :summary => 'He is an evil Robin'
+                              :summary => 'He is a dark Robin'
     @batman = Customer.create! :name => 'Dick Grayson',
                                :address => 'Wayne Manor, Gotham City',
                                :sidekick_id => @robin.id,
