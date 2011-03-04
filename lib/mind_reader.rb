@@ -40,6 +40,13 @@ class MindReader
   end
 
   def run_converters
+    configs.each do |c|
+      if c[:args].has_key?(:converter)
+        callable = c[:args][:converter]
+        value = @pairs[c[:field]]
+        @pairs[c[:field]] = callable.call(value)
+      end
+    end
   end
 
   def handle_partials

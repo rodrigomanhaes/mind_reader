@@ -87,5 +87,12 @@ feature MindReader do
       result.should include(@batman, @robin)
     end
   end
+
+  scenario 'user can provide converters' do
+    reader = MindReader.new(SuperHero) do |r|
+      r.age :converter => lambda {|a| a.to_i * 2 }
+    end
+    reader.execute(:age => '7').should == [@robin]
+  end
 end
 
