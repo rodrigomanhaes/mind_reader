@@ -17,6 +17,7 @@ create table customers (
   sidekick_id integer,
   age int,
   summary text,
+  date_of_heroic_birth date,
   primary key(id));
 ''')
 

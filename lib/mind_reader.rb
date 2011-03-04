@@ -29,6 +29,7 @@ class MindReader
 
   def process
     remove_blanks
+    run_converters
     handle_lookup
     handle_range
     handle_partials
@@ -36,6 +37,9 @@ class MindReader
 
   def remove_blanks
     @pairs.reject! {|k, v| v.blank?}
+  end
+
+  def run_converters
   end
 
   def handle_partials
