@@ -17,7 +17,3 @@ task :spec do
   run_spec
 end
 
-task :acceptance do
-  run_spec
-end
-

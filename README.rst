@@ -85,12 +85,7 @@ How to install
 How to run specs
 ----------------
 
-For acceptance, end-to-end specs::
-
-    $ rake acceptance
-
-
-For unit specs::
+::
 
     $ rake spec
 

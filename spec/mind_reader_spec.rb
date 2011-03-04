@@ -1,123 +1,76 @@
 require File.join(File.dirname(__FILE__), 'spec_helper')
 
-describe MindReader do
-  class BlankSlate < BasicObject; end
+feature MindReader do
+  background do
+    @robin = Customer.create! :name => 'Damian Wayne',
+                              :address => 'Wayne Manor, Gotham City',
+                              :age => 14,
+                              :summary => 'He is a dark Robin'
+    @batman = Customer.create! :name => 'Dick Grayson',
+                               :address => 'Wayne Manor, Gotham City',
+                               :sidekick_id => @robin.id,
+                               :age => 26,
+                               :summary => "He is a happy Batman"
+    @superman = Customer.create! :name => 'Kal-El',
+                                 :address => 'Kandor, New Krypton',
+                                 :age => 36,
+                                 :summary => "He's not anymore the last son of Krypton"
 
-  context 'simple field search' do
-    before :each do
-      @reader = MindReader.new(BlankSlate)
+    @reader = MindReader.new(Customer)
+  end
+
+  scenario 'full field content' do
+    result = @reader.execute(:address => 'Wayne Manor, Gotham City')
+    result.should have(2).bat_heroes
+    result.should include(@batman, @robin)
+  end
+
+  scenario 'full content for multiple fields' do
+    @reader.execute(:address => 'Wayne Manor, Gotham City',
+      :name => 'Dick Grayson').should == [@batman]
+  end
+
+  context 'partial content' do
+    scenario 'for string fields' do
+      result = @reader.execute(:name => 'ay')
+      result.should have(2).super_heroes
+      result.should include(@batman, @robin)
     end
 
-    def stub_type(type)
-      BlankSlate.stub(:columns_hash).and_return(stub(:[] => stub(:type => type)))
-    end
-
-    def stub_string
-      stub_type(:string)
-    end
-
-    def mock_empty_pairs
-      BlankSlate.should_receive(:where).with({}).and_return(@query_mock = mock)
-    end
-
-    it 'performs search by entire field content' do
-      stub_string
-      mock_empty_pairs
-      @query_mock.should_receive(:where).with('field like ?', '%foo_value%')
-      @reader.execute(:field => :foo_value)
-    end
-
-    it 'returns the result from searching' do
-      stub_string
-      BlankSlate.stub(:where).with({}).and_return(query_stub = stub)
-      query_stub.stub(:where).and_return(:foo_return)
-      @reader.execute(:field => :doesnt_matter).should == :foo_return
-    end
-
-    it 'supports searching by multiple fields' do
-      stub_string
-      mock_empty_pairs
-      @query_mock.should_receive(:where).
-                  with("foo like ? and bar like ? and qux like ?",
-                       '%foo_value%', '%bar_value%', '%qux_value%')
-      @reader.execute(:foo => :foo_value, :bar => :bar_value, :qux => :qux_value)
-    end
-
-    context 'search by partial content for' do
-      def should_make_partial_search_for(type)
-        stub_type(type)
-        mock_empty_pairs
-        @query_mock.should_receive(:where).
-                    with("foo like ? and bar like ? and qux like ?",
-                         '%foo_value%', '%bar_value%', '%qux_value%')
-        @reader.execute(:foo => :foo_value, :bar => :bar_value, :qux => :qux_value)
-      end
-
-      it 'string fields' do
-        should_make_partial_search_for :string
-      end
-
-      it 'text fields' do
-        should_make_partial_search_for :text
-      end
-    end
-
-    context 'omitted fields' do
-      it 'ignores blank fields' do
-        stub_string
-        mock_empty_pairs
-        @query_mock.should_receive(:where).with('foo like ?', '%foo_value%')
-        @reader.execute(:foo => :foo_value, :bar => '')
-
-        mock_empty_pairs
-        @query_mock.should_receive(:where).with('foo like ?', '%foo_value%')
-        @reader.execute(:foo => :foo_value, :bar => nil)
-      end
-
-      it 'returns nil if all fields are omitted' do
-        @reader.execute(:foo => '', :bar => '').should be_nil
-      end
-
-      it 'accepts configuration for returning all records when no value is given' do
-        @reader.retrieve_all_when_no_value_is_given = true
-        BlankSlate.should_receive(:find).with(:all)
-        @reader.execute(:foo => '', :bar => '')
-      end
+    scenario 'for text (a.k.a. memo) fields' do
+      result = @reader.execute(:summary => ' is ')
+      result.should have(2).super_heroes
+      result.should include(@batman, @robin)
     end
   end
 
-  def stub_columns_with(hash)
-    BlankSlate.stub(:columns_hash).and_return(obj_stub = stub)
-    hash.each_pair do |field, result|
-      obj_stub.stub(:[]).with(field.to_s).and_return(stub(:type => result))
-    end
+  scenario 'omitted fields are ignored' do
+    @reader.execute(:name => 'Kal-El', :address => '').should == [@superman]
   end
 
-  context 'lookup fields' do
-    it 'calls find for the inner field, not given lookup' do
-      stub_columns_with :quux => :no_string, :anything_else => :string
-      BlankSlate.should_receive(:where).with(:quux => "bar foo").
-                 and_return(where_mock = mock)
-      where_mock.should_receive(:where).
-                 with('anything_else like ?', '%something%')
-      @reader = MindReader.new(BlankSlate) do |r|
-        r.quux(:lookup => :foobar) {|value| "#{value} foo" }
-      end
-      @reader.execute(:foobar => 'bar', :anything_else => 'something')
-    end
+  scenario 'if no value is given, returns nil by default' do
+    @reader.execute(:name => '', :address => '').should be_nil
   end
 
-  context 'ranges' do
-    it 'calls find with given range' do
-      stub_columns_with :field => :string, :anything => :no_string
-      reader = MindReader.new(BlankSlate) do |r|
-        r.anything :range => :any_initial..:any_final
-      end
-      BlankSlate.should_receive(:where).with(:anything => 5..10).
-                 and_return(query_mock = mock)
-      query_mock.should_receive(:where).with('field like ?', '%value%')
-      reader.execute :field => 'value', 'any_initial' => 5, 'any_final' => 10
+  scenario 'configuration to return all the records if no value is given' do
+    @reader.retrieve_all_when_no_value_is_given = true
+    result = @reader.execute(:name => '', :address => '')
+    result.should have(3).super_heroes
+    result.should include(@batman, @robin, @superman)
+  end
+
+  scenario 'lookup fields' do
+    @reader = MindReader.new(Customer) do |r|
+      r.sidekick_id(:lookup => :sidekick_name) {|name| Customer.find_by_name(name).id }
     end
+    @reader.execute(:sidekick_name => 'Damian Wayne').should == [@batman]
+  end
+
+  scenario 'range' do
+    reader = MindReader.new(Customer) do |r|
+      r.age :range => :start_age..:end_age
+    end
+    reader.execute('start_age' => 25, 'end_age' => 36).should == [@batman, @superman]
   end
 end
 
