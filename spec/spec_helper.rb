@@ -8,7 +8,7 @@ end
 require 'config'
 require 'mind_reader'
 
-class Customer < ActiveRecord::Base
-  has_many :sidekicks, :class_name => 'Customer'
+class SuperHero < ActiveRecord::Base
+  has_many :sidekicks, :class_name => 'SuperHero'
 end
 

@@ -10,7 +10,7 @@ db_file = 'spec/config/db.sqlite3'
 File.unlink(db_file) if File.exist?(db_file)
 db = SQLite3::Database.new(db_file)
 db.execute('''
-create table customers (
+create table super_heros (
   id integer,
   name char(100),
   address char(200),
