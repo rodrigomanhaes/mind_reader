@@ -88,11 +88,21 @@ feature MindReader do
     end
   end
 
-  scenario 'user can provide converters' do
-    reader = MindReader.new(SuperHero) do |r|
-      r.age :converter => lambda {|a| a.to_i * 2 }
+
+  context 'user can provide converters' do
+    scenario 'for simple fields' do
+      reader = MindReader.new(SuperHero) do |r|
+        r.age :converter => lambda {|a| a.to_i * 2 }
+      end
+      reader.execute(:age => '7').should == [@robin]
     end
-    reader.execute(:age => '7').should == [@robin]
+
+    scenario 'for ranges' do
+      reader = MindReader.new(SuperHero) do |r|
+        r.age :range => :start_age..:end_age, :converter => lambda {|a| a.to_i / 2 }
+      end
+      reader.execute('start_age' => '26', 'end_age' => '50').should == [@robin]
+    end
   end
 end
 

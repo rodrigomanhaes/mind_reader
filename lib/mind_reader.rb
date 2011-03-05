@@ -42,11 +42,20 @@ class MindReader
   def run_converters
     configs.each do |c|
       if c[:args].has_key?(:converter)
-        callable = c[:args][:converter]
-        value = @pairs[c[:field]]
-        @pairs[c[:field]] = callable.call(value)
+        if c[:args].has_key?(:range)
+          apply_converter(c, c[:args][:range].begin.to_s)
+          apply_converter(c, c[:args][:range].end.to_s)
+        else
+          apply_converter(c, c[:field])
+        end
       end
     end
+  end
+
+  def apply_converter(config, field)
+    callable = config[:args][:converter]
+    value = @pairs[field]
+    @pairs[field] = callable.call(value)
   end
 
   def handle_partials
