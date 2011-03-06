@@ -86,6 +86,15 @@ feature MindReader do
       result.should have(2).items
       result.should include(@batman, @robin)
     end
+
+    scenario 'with empty values' do
+      reader = MindReader.new(SuperHero) do |r|
+        r.date_of_heroic_birth :range => :start_date..:end_date
+      end
+      reader.execute('name' => 'Wayne', 'start_date' => '', 'end_date' => '').should == [@robin]
+      reader.execute('name' => 'Wayne', 'start_date' => Date.today, 'end_date' => '').should == [@robin]
+      reader.execute('name' => 'Wayne', 'start_date' => '', 'end_date' => Date.today).should == [@robin]
+    end
   end
 
 

@@ -83,7 +83,9 @@ class MindReader
         range = c[:args][:range]
         start_field, end_field = range.begin.to_s, range.end.to_s
         start_value, end_value = @pairs.delete(start_field), @pairs.delete(end_field)
-        @pairs.merge! c[:field] => start_value..end_value
+        if start_value.present? && end_value.present?
+          @pairs.merge! c[:field] => start_value..end_value
+        end
       end
     end
   end
