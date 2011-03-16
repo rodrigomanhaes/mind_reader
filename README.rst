@@ -74,6 +74,20 @@ unless you say you want all objects::
     result.should include(@batman, @robin, @superman)
 
 
+mind_reader supports converters for incoming data. For sake of example, imagine
+you have to enter a date in a different format (here, dd/mm/yyyy), and you want
+to convert it to default yyyy-mm-dd::
+
+      def convert_to_default(br_date)
+        br_date =~ /(\d+)\/(\d+)\/(\d+)/
+        "%s-%s-%s" % [$3, $2, $1]
+      end
+
+      reader = MindReader.new(SuperHero) do |r|
+        r.date_of_heroic_birth :range => :from_date..:to_date, :converter => lambda {|d| convert_to_default(d) }
+      end
+      reader.execute('from_date' => '01/04/2010', 'to_date' => '30/04/2010').should == [@batman]
+
 
 How to install
 --------------
