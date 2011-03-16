@@ -114,10 +114,15 @@ feature MindReader do
     end
 
     scenario 'date ranges' do
-      reader = MindReader.new(SuperHero) do |r|
-        r.date_of_heroic_birth :range => :start..:end, :converter => lambda {|d| d.to_date }
+      def convert_to_default(br_date)
+        br_date =~ /(\d+)\/(\d+)\/(\d+)/
+        "%s-%s-%s" % [$3, $2, $1]
       end
-      reader.execute('start' => '2010-04-01', 'end' => '2010-04-30', 'name' => 'ay').should == [@batman]
+
+      reader = MindReader.new(SuperHero) do |r|
+        r.date_of_heroic_birth :range => :from_date..:to_date, :converter => lambda {|d| convert_to_default(d) }
+      end
+      reader.execute('from_date' => '01/04/2010', 'to_date' => '30/04/2010').should == [@batman]
     end
   end
 end

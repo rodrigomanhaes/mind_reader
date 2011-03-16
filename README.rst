@@ -74,6 +74,7 @@ unless you say you want all objects::
     result.should include(@batman, @robin, @superman)
 
 
+
 How to install
 --------------
 
