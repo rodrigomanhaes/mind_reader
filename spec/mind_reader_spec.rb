@@ -112,6 +112,13 @@ feature MindReader do
       end
       reader.execute('start_age' => '26', 'end_age' => '50').should == [@robin]
     end
+
+    scenario 'date ranges' do
+      reader = MindReader.new(SuperHero) do |r|
+        r.date_of_heroic_birth :range => :start..:end, :converter => lambda {|d| d.to_date }
+      end
+      reader.execute('start' => '2010-04-01', 'end' => '2010-04-30', 'name' => 'ay').should == [@batman]
+    end
   end
 end
 
