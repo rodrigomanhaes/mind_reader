@@ -1,7 +1,6 @@
-MindReader: Easy searching for ActiveRecord applications
-========================================================
+= MindReader: Easy searching for ActiveRecord applications
 
-Given the following objects::
+Given the following objects:
 
     @robin = Customer.create! :name => 'Damian Wayne',
                               :address => 'Wayne Manor, Gotham City',
@@ -15,7 +14,7 @@ Given the following objects::
                                  :age => 36
 
 
-Find by one field::
+Find by one field:
 
     reader = MindReader.new(Customer)
     result = reader.execute(:address => 'Wayne Manor, Gotham City')
@@ -23,21 +22,21 @@ Find by one field::
     result.should include(@batman, @robin)
 
 
-Find by multiple fields::
+Find by multiple fields:
 
     reader = MindReader.new(Customer)
     reader.execute(:address => 'Wayne Manor, Gotham City',
       :name => 'Dick Grayson').should == [@batman]
 
 
-String fields are evaluated partially::
+String fields are evaluated partially:
 
     result = reader.execute(:name => 'ay')
     result.should have(2).super_heroes
     result.should include(@batman, @robin)
 
 
-Find with lookup::
+Find with lookup:
 
     reader = MindReader.new(Customer) do |r|
       r.sidekick_id(:lookup => :sidekick_name) {|name| Customer.find_by_name(name).id }
@@ -45,7 +44,7 @@ Find with lookup::
     reader.execute(:sidekick_name => 'Damian Wayne').should == [@batman]
 
 
-Find given a range::
+Find given a range:
 
     reader = MindReader.new(Customer) do |r|
       r.age :range => :start_age..:end_age
@@ -53,19 +52,19 @@ Find given a range::
     reader.execute('start_age' => 25, 'end_age' => 36).should == [@batman, @superman]
 
 
-Blank fields are ignored::
+Blank fields are ignored:
 
     reader = MindReader.new(Customer)
     reader.execute(:name => 'Kal-El', :address => '').should == [@superman]
 
 
-If all fields are blank, returns nil::
+If all fields are blank, returns nil:
 
     reader = MindReader.new(Customer)
     reader.execute(:name => '', :address => '').should be_nil
 
 
-unless you say you want all objects::
+unless you say you want all objects:
 
     reader = MindReader.new(Customer)
     reader.retrieve_all_when_no_value_is_given = true
@@ -89,18 +88,19 @@ to convert it to default yyyy-mm-dd::
       reader.execute('from_date' => '01/04/2010', 'to_date' => '30/04/2010').should == [@batman]
 
 
-How to install
---------------
+== How to install
 
-::
 
     $ gem install mind_reader
 
 
-How to run specs
-----------------
+== How to run specs
 
-::
 
     $ rake spec
+
+
+== Copyright
+
+Copyright (c) 2011 Rodrigo Manhães. See LICENSE.txt for further details.
 
