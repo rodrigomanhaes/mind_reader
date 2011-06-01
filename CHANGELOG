@@ -1,0 +1,6 @@
+0.1.0
+
+* text-type fields accepts searching by partial content
+* added support to converters
+* ranges with empty values are ignored
+

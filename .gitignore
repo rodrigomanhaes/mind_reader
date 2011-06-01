@@ -2,4 +2,5 @@
 *.log
 *.sqlite3
 .rvmrc
+*.gem
 
