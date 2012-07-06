@@ -11,14 +11,13 @@ File.unlink(db_file) if File.exist?(db_file)
 db = SQLite3::Database.new(db_file)
 db.execute('''
 create table super_heros (
-  id integer,
+  id integer primary key autoincrement,
   name char(100),
   address char(200),
   sidekick_id integer,
   age int,
   summary text,
-  date_of_heroic_birth date,
-  primary key(id));
+  date_of_heroic_birth date);
 ''')
 
 # connection
@@ -41,4 +40,3 @@ RSpec.configure do |config|
     DatabaseCleaner.clean
   end
 end
-
