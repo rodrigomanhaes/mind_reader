@@ -16,10 +16,9 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.files = Dir.glob('lib/**/*.rb') + %w(README.rdoc LICENSE.txt)
 
-  s.add_dependency 'activerecord', '~>3.0.0'
-  s.add_development_dependency 'rspec', '~>2.0.0'
-  s.add_development_dependency 'steak', '~>1.0.0'
-  s.add_development_dependency 'sqlite3-ruby', '~>1.3.0'
-  s.add_development_dependency 'database_cleaner', '~>0.6.0'
+  s.add_dependency 'activerecord', '~> 3.2'
+  s.add_development_dependency 'rspec', '~> 2.10.0'
+  s.add_development_dependency 'capybara', '~> 1.1.2'
+  s.add_development_dependency 'sqlite3', '~> 1.3.6'
+  s.add_development_dependency 'database_cleaner', '~> 0.8.0'
 end
-
